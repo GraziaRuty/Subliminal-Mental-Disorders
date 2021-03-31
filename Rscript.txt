@@ -1,0 +1,377 @@
+### Setting working directory
+
+setwd("~/Projects/subliminal/SL_MetaAnalysis/final/Neurosci Biobehav/revision 1b")
+
+### Loading packages
+
+library(esc)
+library(dmetar)
+library(meta)
+library(metafor)
+
+****************************************************************************************
+
+### Panic disorder (experimental) vs Healthy control (control) - panic-related words, masked
+
+### Calculate ES (Hedges' g): Lundh et al., 1999
+
+esc_mean_sd(grp1m = 571.5, grp1sd = 183.4, grp1n = 35, grp2m = 497.1, grp2sd = 59.0, grp2n = 35, es.type = "g")
+
+### Calculate ES (Hedges' g): Quero et al., 2001
+
+esc_mean_sd(grp1m = 757.9, grp1sd = 104.3, grp1n = 25, grp2m = 739.2, grp2sd = 141.5, grp2n = 25, es.type = "g")
+
+### Calculate ES (Hedges' g): Kampman et al., 2002
+
+esc_mean_sd(grp1m = 640, grp1sd = 65, grp1n = 21, grp2m = 555, grp2sd = 57, grp2n = 20, es.type = "g")
+
+### Calculate ES (Hedges' g): Buckley et al., 2002
+
+esc_t(p=0.99, grp1n = 30, grp2n = 30, es.type = "g")
+
+### Calculate ES (Hedges' g): Lim & Kim, et al. 2005 
+
+esc_mean_sd(grp1m = 910.16, grp1sd = 137.62, grp1n = 33, grp2m = 794.48, grp2sd = 90.75, grp2n = 33, es.type = "g")
+
+### Calculate ES (Hedges' g): Reinecke et al., 2011
+
+esc_mean_sd(grp1m = 25.01, grp1sd = 41.46, grp1n = 23, grp2m = -5.64, grp2sd = 46.71, grp2n = 22, es.type = "g")
+
+### Getting data into R
+
+PDvsHC_pd_byInclCrit <- read_excel("PDvsHC_pd_byInclCrit.xlsx", 
++     col_types = c("text", "numeric", "numeric", 
++         "numeric", "numeric", "numeric", 
++         "numeric"))
+> View(PDvsHC_pd_byInclCrit)
+
+### Pooling ES - Hartung-Knapp-Sidik-Jonkman (HKSJ) method
+
+m.pr.masked<-metagen(TE, seTE, data = PDvsHC_pd_byInclCrit, studlab = paste(Author), comb.fixed = FALSE, comb.random = TRUE, method.tau = "SJ", hakn = TRUE, prediction = TRUE, sm="SMD")
+
+### Forest plot with personalized layout
+
+forest.meta(m.pr.masked, digits.se = 2, leftlabs = c("Study", "Effect Size", "Standard error"), rightlabs = c("Hedges'g", "95% CI", "Weight"), col.square = "#c1eaea", col.diamond = "#0dc9b6", col.diamond.lines = "#000000", col.predict = "#cc0085", col.predict.lines = "#000000")
+
+### Between-study heterogeneity
+
+### Detecting outliers
+
+m.pr.masked$lower.random
+m.pr.masked$upper.random
+find.outliers(m.pr.masked)
+
+### Influence analysis
+
+inf.analysis<-InfluenceAnalysis(x=m.pr.masked, random = TRUE)
+summary(inf.analysis)
+plot(inf.analysis, "influence")
+plot(inf.analysis, "baujat")
+plot(inf.analysis, "es")
+plot(inf.analysis, "i2")
+
+### Meta-regression models 
+
+### ES by publication year
+
+metareg(m.pr.masked, pub_year)
+
+### ES by duration of stimulus presentation
+
+metareg(m.pr.masked, duration)
+
+### ES by age
+
+metareg(m.pr.masked, age)
+
+### ES by female proportion
+
+metareg(m.pr.masked, female)
+
+### ES by STAI score
+
+metareg(m.pr.masked, STAI)
+
+### ES by BDI score
+
+metareg(m.pr.masked, BDI)
+
+### ES by NOS score
+
+metareg(m.pr.masked, NOS)
+
+### Plotting meta-regression output: ES by BDI score
+
+output.metareg.pr<-metareg(m.pr.masked, BDI)
+bubble(output.metareg.pr, xlab = "BDI", col.line = "red", studlab = TRUE, pos.studlab = 4, xlim = c(12,17))
+
+### Publication bias: small sample bias method
+
+funnel.meta(m.pr.masked, xlab = "Hedges'g", contour = c(.95,.975,.99), col.contour = c("darkblue","blue","lightblue"))+
++     + legend(0.9, 0, c("p<0.05","p<0.025","p<0.01"),bty = "n", fill = c("darkblue","blue","lightblue"))
+
+eggers.test(x=m.pr.masked)
+trimfill.meta(m.pr.masked)
+m.pr.masked.tf<-trimfill.meta(m.pr.masked)
+funnel.meta(m.pr.masked.tf, xlab = "Hedges'g", studlab = TRUE)
+
+******************************************************************************************
+### Sensitivity analysis: Panic disorder (experimental) vs Healthy control (control) - panic-related words, masked, omitting studies not testing individual subject's awareness
+
+### Getting data into R
+
+PDvsHC_pr_subjective <- read_excel("PDvsHC_pr_subjective.xlsx", 
++     col_types = c("text", "numeric", "numeric", 
++         "numeric", "numeric", "numeric", 
++         "numeric"))
+> View(PDvsHC_pr_subjective)
+
+### Pooling ES - Hartung-Knapp-Sidik-Jonkman (HKSJ) method
+
+m.pr.masked.subj<-metacont(Ne, Me, Se, Nc, Mc, Sc, data = PDvsHC_pr_subjective, studlab = paste(Author), comb.fixed = FALSE, comb.random = TRUE, method.tau = "SJ", hakn = TRUE, prediction = TRUE, sm="SMD")
+
+### Forest plot with personalized layout
+
+forest.meta(m.pr.masked.subj, digits.se = 2, col.square = "#c1eaea", col.diamond = "#0dc9b6", col.diamond.lines = "#000000", col.predict = "#cc0085", col.predict.lines = "#000000")
+
+********************************************************************************************
+
+### Panic disorder (experimental) vs Healthy control (control) - neutral words, masked
+
+### Calculate ES (Hedges' g): Lundh et al., 1999
+
+esc_mean_sd(grp1m = 558.2, grp1sd = 163.1, grp1n = 35, grp2m = 503.2, grp2sd = 58.9, grp2n = 35, es.type = "g")
+
+### Calculate ES (Hedges' g): Quero et al., 2001
+
+esc_mean_sd(grp1m = 746.9, grp1sd = 100.4, grp1n = 25, grp2m = 727.3, grp2sd = 138.7, grp2n = 25, es.type = "g")
+
+### Calculate ES (Hedges' g): Kampman et al., 2002
+
+esc_mean_sd(grp1m = 638, grp1sd = 67, grp1n = 21, grp2m = 562, grp2sd = 45, grp2n = 20, es.type = "g")
+
+### Calculate ES (Hedges' g): Buckley et al., 2002
+
+esc_t(p=0.99, grp1n = 30, grp2n = 30, es.type = "g")
+
+### Calculate ES (Hedges' g): Lim & Kim et al., 2005
+
+esc_mean_sd(grp1m = 882.99, grp1sd = 120.17, grp1n = 33, grp2m = 829.54, grp2sd = 75.34, grp2n = 33, es.type = "g")
+
+### Getting data into R
+
+library(readxl)
+> PDvsHC_n_byInclCrit <- read_excel("PDvsHC_n_byInclCrit.xlsx", 
++     col_types = c("text", "numeric", "numeric", 
++         "numeric", "text"))
+> View(PDvsHC_n_byInclCrit)
+
+### Pooling ES - Hartung-Knapp-Sidik-Jonkman (HKSJ) method
+
+m.n.masked<-metagen(TE, seTE, data = PDvsHC_n_byInclCrit, studlab = paste(Author), comb.fixed = FALSE, comb.random = TRUE, method.tau = "SJ", hakn = TRUE, prediction = TRUE, sm="SMD")
+
+### Forest plot with personalized layout
+
+forest.meta(m.n.masked, digits.se = 2, leftlabs = c("Study", "Effect Size", "Standard error"), rightlabs = c("Hedges'g", "95% CI", "Weight"), col.square = "#c9c0b1", col.diamond = "#4c4c4c", col.diamond.lines = "#000000", col.predict = "#cc0085", col.predict.lines = "#000000")
+
+### Between-study heterogeneity
+
+### Detecting outliers
+
+m.n.masked$lower.random
+m.n.masked$upper.random
+find.outliers(m.n.masked)
+
+### Influence analysis
+
+inf.analysis.n<-InfluenceAnalysis(x=m.n.masked, random = TRUE)
+summary(inf.analysis.n)
+plot(inf.analysis.n, "es")
+plot(inf.analysis.n, "i2")
+
+***************************************************************************************
+
+### Sensitivity analysis: Panic disorder (experimental) vs Healthy control (control) - neutral words, masked, omitting studies not testing individual subject's awareness
+
+### Getting data into R
+
+library(readxl)
+> PDvsHC_n_subjective <- read_excel("PDvsHC_n_subjective.xlsx", 
++     col_types = c("text", "numeric", "numeric", 
++         "numeric", "numeric", "numeric", 
++         "numeric", "numeric", "numeric", 
++         "numeric", "numeric", "numeric", 
++         "numeric", "numeric", "numeric"))
+> View(PDvsHC_n_subjective)
+
+
+### Pooling ES - Hartung-Knapp-Sidik-Jonkman (HKSJ) method
+
+m.n.masked.subj<-metacont(Ne, Me, Se, Nc, Mc, Sc, data = PDvsHC_n_subjective, studlab = paste(Author), comb.fixed = FALSE, comb.random = TRUE, method.tau = "SJ", hakn = TRUE, prediction = TRUE, sm="SMD")
+
+### Forest plot with personalized layout
+
+forest.meta(m.n.masked.subj, digits.se = 2, col.square = "#c9c0b1", col.diamond = "#4c4c4c", col.diamond.lines = "#000000", col.predict = "#cc0085", col.predict.lines = "#000000")
+
+
+********************************************************************************************
+
+### Panic-related (experimental) vs neutral (control) words, masked, within PD
+
+### Getting data into R
+
+library(readxl)
+> PRvsN_pd_masked <- read_excel("PRvsN_pd_masked.xlsx", 
++     col_types = c("text", "numeric", "numeric", 
++         "numeric", "numeric", "numeric", 
++         "numeric", "text"))
+> View(PRvsN_pd_masked)
+
+### Pooling ES - Hartung-Knapp-Sidik-Jonkman (HKSJ) method
+
+m.PRvsN.pd<-metacont(Ne, Me, Se, Nc, Mc, Sc, data = PRvsN_pd_masked, studlab = paste(Author), comb.fixed = FALSE, comb.random = TRUE, method.tau = "SJ", hakn = TRUE, prediction = TRUE, sm="SMD")
+
+### Forest plot with personalized layout
+
+forest.meta(m.PRvsN.pd, digits.se = 2, col.square = "#94abd1", col.diamond = "#3c5a8b", col.diamond.lines = "#000000", col.predict = "#cc0085", col.predict.lines = "#000000")
+
+********************************************************************************************
+
+### Panic-related (experimental) vs neutral (control) words, masked, within HC
+
+### Getting data into R
+
+library(readxl)
+> PRvsN_hc_masked <- read_excel("PRvsN_hc_masked.xlsx", 
++     col_types = c("text", "numeric", "numeric", 
++         "numeric", "numeric", "numeric", 
++         "numeric", "text"))
+> View(PRvsN_hc_masked)
+
+### Pooling ES - Hartung-Knapp-Sidik-Jonkman (HKSJ) method
+
+m.PRvsN.hc<-metacont(Ne, Me, Se, Nc, Mc, Sc, data = PRvsN_hc_masked, studlab = paste(Author), comb.fixed = FALSE, comb.random = TRUE, method.tau = "SJ", hakn = TRUE, prediction = TRUE, sm="SMD")
+
+### Forest plot with personalized layout
+
+forest.meta(m.PRvsN.hc, digits.se = 2, col.square = "#94abd1", col.diamond = "#3c5a8b", col.diamond.lines = "#000000", col.predict = "#cc0085", col.predict.lines = "#000000")
+
+****************************************************************************************
+
+### Panic-related (experimental) vs neutral (control) words, within PD, comparison masked vs unmasked
+
+### Calculate ES (Hedges' g): Lundh et al., 1999, masked
+
+esc_mean_sd(grp1m = 571.5, grp1sd = 183.4, grp1n = 35, grp2m = 558.2, grp2sd = 163.1, grp2n = 35, es.type = "g")
+
+### Calculate ES (Hedges' g): Lundh et al., 1999, unmasked
+
+esc_mean_sd(grp1m = 694.8, grp1sd = 136.7, grp1n = 35, grp2m = 664.5, grp2sd = 116.2, grp2n = 35, es.type = "g")
+
+### Calculate ES (Hedges' g): Quero et al., 2001, masked
+
+esc_mean_sd(grp1m = 757.9, grp1sd = 104.3, grp1n = 25, grp2m = 746.9, grp2sd = 100.4, grp2n = 25, es.type = "g")
+
+### Calculate ES (Hedges' g): Quero et al., 2001, unmasked
+
+esc_mean_sd(grp1m = 770.2, grp1sd = 91.7, grp1n = 25, grp2m = 709.8, grp2sd = 92.6, grp2n = 25, es.type = "g")
+
+### Calculate ES (Hedges' g): Kampman et al., 2002, masked
+
+esc_mean_sd(grp1m = 640, grp1sd = 65, grp1n = 21, grp2m = 638, grp2sd = 67, grp2n = 21, es.type = "g")
+
+### Calculate ES (Hedges' g): Kampman et al., 2002, unmasked
+
+esc_mean_sd(grp1m = 732, grp1sd = 108, grp1n = 21, grp2m = 721, grp2sd = 100, grp2n = 21, es.type = "g")
+
+### Calculate ES (Hedges' g): Lim & Kim, et al. 2005, masked
+
+esc_mean_sd(grp1m = 910.16, grp1sd = 137.62, grp1n = 33, grp2m = 882.99, grp2sd = 120.17, grp2n = 33, es.type = "g")
+
+### Calculate ES (Hedges' g): Lim & Kim, et al. 2005, unmasked
+
+esc_mean_sd(grp1m = 853.39, grp1sd = 103.05, grp1n = 33, grp2m = 851.48, grp2sd = 96.93, grp2n = 33, es.type = "g")
+
+### Calculate ES (Hedges' g): Buckley et al., 2002, unmasked
+
+esc_t(t=4.5, grp1n = 30, grp2n = 30, es.type = "g")
+
+### Getting data into R
+
+library(readxl)
+> PRvsN_pd_maskedVSunmasked <- read_excel("PRvsN_pd_maskedVSunmasked.xlsx", 
++     col_types = c("text", "numeric", "numeric", 
++         "text"))
+> View(PRvsN_pd_maskedVSunmasked)
+
+### Pooling ES - Hartung-Knapp-Sidik-Jonkman (HKSJ) method
+
+m.PRvsN.pd.cond<-metagen(TE, seTE, data = PRvsN_pd_maskedVSunmasked, studlab = paste(Author), comb.fixed = FALSE, comb.random = TRUE, method.tau = "SJ", hakn = TRUE, prediction = TRUE, sm="SMD")
+
+### Subgroup analysis: Masked vs Unmasked presentations
+
+maskedVSunmasked.prVSn.pd<-subgroup.analysis.mixed.effects(m.PRvsN.pd.cond, subgroups = PRvsN_pd_maskedVSunmasked$Condition)
+
+### Forest plot with personalized layout
+
+forest.subgroup.analysis.mixed.effects(maskedVSunmasked.prVSn.pd, digits.se = 2, col.square = "#94abd1", col.diamond = "#3c5a8b", col.diamond.lines = "#000000", col.predict = "#cc0085", col.predict.lines = "#000000")
+
+******************************************************************************************
+
+### Panic-related (experimental) vs neutral (control) words, within HC, comparison masked vs unmasked
+
+### Calculate ES (Hedges' g): Lundh et al., 1999, masked
+
+esc_mean_sd(grp1m = 497.1, grp1sd = 59, grp1n = 35, grp2m = 503.2, grp2sd = 58.9, grp2n = 35, es.type = "g")
+
+### Calculate ES (Hedges' g): Lundh et al., 1999, unmasked
+
+esc_mean_sd(grp1m = 623.7, grp1sd = 70.3, grp1n = 35, grp2m = 614.3, grp2sd = 76.3, grp2n = 35, es.type = "g")
+
+### Calculate ES (Hedges' g): Quero et al., 2001, masked
+
+esc_mean_sd(grp1m = 739.2, grp1sd = 141.5, grp1n = 25, grp2m = 727.3, grp2sd = 138.7, grp2n = 25, es.type = "g")
+
+### Calculate ES (Hedges' g): Quero et al., 2001, unmasked
+
+esc_mean_sd(grp1m = 765.8, grp1sd = 79.4, grp1n = 25, grp2m = 720.4, grp2sd = 113.6, grp2n = 25, es.type = "g")
+
+### Calculate ES (Hedges' g): Kampman et al., 2002, masked
+
+esc_mean_sd(grp1m = 555, grp1sd = 57, grp1n = 20, grp2m = 562, grp2sd = 45, grp2n = 20, es.type = "g")
+
+### Calculate ES (Hedges' g): Kampman et al., 2002, unmasked
+
+esc_mean_sd(grp1m = 630, grp1sd = 85, grp1n = 20, grp2m = 621, grp2sd = 85, grp2n = 20, es.type = "g")
+
+### Calculate ES (Hedges' g): Lim & Kim, et al. 2005, masked
+
+esc_mean_sd(grp1m = 794.48, grp1sd = 90.75, grp1n = 33, grp2m = 829.54, grp2sd = 75.34, grp2n = 33, es.type = "g")
+
+### Calculate ES (Hedges' g): Lim & Kim, et al. 2005, unmasked
+
+esc_mean_sd(grp1m = 768.01, grp1sd = 74.25, grp1n = 33, grp2m = 766.14, grp2sd = 71.94, grp2n = 33, es.type = "g")
+
+### Calculate ES (Hedges' g): Buckley et al., 2002, unmasked
+
+esc_t(p=0.99, grp1n = 30, grp2n = 30, es.type = "g")
+
+### Getting data into R
+
+library(readxl)
+> PRvsN_hc_maskedVSunmasked <- read_excel("PRvsN_hc_maskedVSunmasked.xlsx", 
++     col_types = c("text", "numeric", "numeric", 
++         "text"))
+> View(PRvsN_hc_maskedVSunmasked)
+
+### Pooling ES - Hartung-Knapp-Sidik-Jonkman (HKSJ) method
+
+m.PRvsN.hc.cond<-metagen(TE, seTE, data = PRvsN_hc_maskedVSunmasked, studlab = paste(Author), comb.fixed = FALSE, comb.random = TRUE, method.tau = "SJ", hakn = TRUE, prediction = TRUE, sm="SMD")
+
+### Subgroup analysis: Masked vs Unmasked presentations
+
+maskedVSunmasked.prVSn.hc<-subgroup.analysis.mixed.effects(m.PRvsN.hc.cond, subgroups = PRvsN_hc_maskedVSunmasked$Condition)
+
+### Forest plot with personalized layout
+
+forest.subgroup.analysis.mixed.effects(maskedVSunmasked.prVSn.hc, digits.se = 2, col.square = "#94abd1", col.diamond = "#3c5a8b", col.diamond.lines = "#000000", col.predict = "#cc0085", col.predict.lines = "#000000")
